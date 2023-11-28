@@ -1,0 +1,59 @@
+version: '3'
+
+services:
+  php:
+    build:
+      dockerfile: php7-apache2-dockerfile
+      context: .
+    image: php7-apache2-dockerfile
+    container_name: php
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./html:/var/www/html
+    depends_on:
+      - mysqldb
+    links:
+      - mysqldb
+
+  mysqldb:
+    container_name: mysql
+    image: mysql:5.7
+    platform: linux/amd64
+    restart: always
+    ports:
+      - '3307:3306'
+    volumes:
+      - ./db_data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root 
+      - MYSQL_DATABASE=demo
+
+  phpmyadmin:
+    container_name: myadmin
+    depends_on:
+      - mysqldb
+    image: phpmyadmin
+    links:
+      - mysqldb
+    restart: always
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+      MYSQL_ROOT_PASSWORD: password
+     
+  portainer:
+    container_name: portainer
+    image: portainer/portainer-ce:latest
+    ports:
+      - "9443:9443"
+    volumes:
+      - ./portainer_data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+    
